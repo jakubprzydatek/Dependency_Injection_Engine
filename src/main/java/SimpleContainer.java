@@ -5,10 +5,10 @@ import java.util.HashMap;
 
 public class SimpleContainer {
 
-    private HashMap<Type, RegisteredObject> registeredObjects = new HashMap<>();
+    private final HashMap<Type, RegisteredObject> registeredObjects = new HashMap<>();
 
     public void registerType(Type type, boolean singleton)
-    {
+            throws IllegalContainerRequest, ClassNotFoundException {
         if(registeredObjects.containsKey(type)) {
 
             registeredObjects.get(type).setLifeCycle(singleton ? ObjectLifeCycle.SINGLETON : ObjectLifeCycle.TRANSIENT);
@@ -18,26 +18,19 @@ public class SimpleContainer {
         }
     }
 
-    public void registerType(Type from, Type to, boolean singleton) {
+    public void registerType(Type from, Type to, boolean singleton)
+            throws ClassNotFoundException, IllegalContainerRequest {
         String fromClass = from.getTypeName();
         String toClass = to.getTypeName();
-        try{
-            if(!Class.forName(fromClass).isAssignableFrom(Class.forName(toClass))) {
-                throw new IllegalArgumentException();
-            }
-            else {
-                System.out.println("ZAEBYŚCIE");
-                registeredObjects.put(from, new RegisteredObject(to,
-                        singleton ? ObjectLifeCycle.SINGLETON : ObjectLifeCycle.TRANSIENT));
-            }
-        }
-        catch (ClassNotFoundException e)
-        {
-            System.out.println("Ekksepszyn");
+
+        if(!Class.forName(fromClass).isAssignableFrom(Class.forName(toClass))) {
+            throw new IllegalContainerRequest("First argument is not assignable from second argument!");
         }
     }
 
-    public Object resolve(Type type) {
+    public Object resolve(Type type)
+            throws ClassNotFoundException, IllegalContainerRequest, NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
 
         if(!registeredObjects.containsKey(type)) {
             Class<?> typeClass = null;
@@ -48,21 +41,10 @@ public class SimpleContainer {
             }
             int modifier = typeClass.getModifiers();
             if(Modifier.isAbstract(modifier) || Modifier.isInterface(modifier)) {
-                throw new IllegalArgumentException(); //TODO ten wyjątek
+                throw new IllegalContainerRequest("Not concrete type is not resolvable!");
             }
-            Object objToReturn = null;
-            try {
-                objToReturn = typeClass.getConstructor().newInstance();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-            return objToReturn;
+
+            return typeClass.getConstructor().newInstance();
         }
         else {
             RegisteredObject regObj = registeredObjects.get(type);
