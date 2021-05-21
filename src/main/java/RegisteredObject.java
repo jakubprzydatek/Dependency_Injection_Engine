@@ -25,36 +25,12 @@ public class RegisteredObject {
         return instance;
     }
 
-    public void createInstance(Object... constructorParams) {
-        Class<?> typeClass = null;
-        try{
-            typeClass = Class.forName(type.getTypeName());
-        }catch (ClassNotFoundException e)
-        {
-            e.printStackTrace();
-            return;
-        }
-
-        Constructor<?> constructor = null;
-
-        try{
-            constructor = typeClass.getConstructor();
-        }
-        catch (NoSuchMethodException e)
-        {
-            e.printStackTrace();
-            return;
-        }
-
-        try{
-            instance = constructor.newInstance(constructorParams);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
-
+    public void createInstance(Object... constructorParams)
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+            InstantiationException, IllegalAccessException {
+        Class<?> typeClass = typeClass = Class.forName(type.getTypeName());
+        Constructor<?> constructor = typeClass.getConstructor();
+        instance = constructor.newInstance(constructorParams);
     }
 
     public void setInstance(Object instance)

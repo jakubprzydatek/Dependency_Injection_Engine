@@ -136,4 +136,30 @@ class SimpleContainerTest {
         Assertions.assertEquals("First argument is not assignable from second argument!", thrown.getMessage());
     }
 
+    @Test
+    public void checkIfReturnsRegisteredInstance() throws Exception {
+        //given
+        SimpleContainer container = new SimpleContainer();
+        Foo fooInstance = new Foo();
+        //when
+        container.registerInstance(IFoo.class, fooInstance);
+        IFoo fooContainerInstance = (IFoo) container.resolve(IFoo.class);
+        //then
+        Assertions.assertEquals(fooInstance, fooContainerInstance);
+    }
+
+    @Test
+    public void checkIfReturnsRegisteredInstanceAfterTypeRegistration() throws Exception {
+        //given
+        SimpleContainer container = new SimpleContainer();
+        Foo fooInstance = new Foo();
+        //when
+        container.registerType(IFoo.class, Foo.class, true);
+        container.registerInstance(IFoo.class, fooInstance);
+        IFoo fooContainerInstance = (IFoo) container.resolve(IFoo.class);
+        //then
+        Assertions.assertEquals(fooInstance, fooContainerInstance);
+    }
+
+
 }

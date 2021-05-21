@@ -26,6 +26,9 @@ public class SimpleContainer {
         if(!Class.forName(fromClass).isAssignableFrom(Class.forName(toClass))) {
             throw new IllegalContainerRequest("First argument is not assignable from second argument!");
         }
+
+        registeredObjects.put(from, new RegisteredObject(to,
+                singleton ? ObjectLifeCycle.SINGLETON : ObjectLifeCycle.TRANSIENT));
     }
 
     public Object resolve(Type type)
@@ -33,12 +36,8 @@ public class SimpleContainer {
             InvocationTargetException, InstantiationException, IllegalAccessException {
 
         if(!registeredObjects.containsKey(type)) {
-            Class<?> typeClass = null;
-            try {
-                typeClass = Class.forName(type.getTypeName());
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+            Class<?> typeClass = Class.forName(type.getTypeName());
+
             int modifier = typeClass.getModifiers();
             if(Modifier.isAbstract(modifier) || Modifier.isInterface(modifier)) {
                 throw new IllegalContainerRequest("Not concrete type is not resolvable!");
