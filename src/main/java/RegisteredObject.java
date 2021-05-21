@@ -57,6 +57,11 @@ public class RegisteredObject {
 
     }
 
+    public void setInstance(Object instance)
+    {
+        this.instance = instance;
+    }
+
     public ObjectLifeCycle getLifeCycle() {
         return lifeCycle;
     }

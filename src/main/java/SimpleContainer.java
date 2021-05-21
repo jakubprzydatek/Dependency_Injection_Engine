@@ -56,4 +56,16 @@ public class SimpleContainer {
 
     }
 
+    public void registerInstance(Type type, Object instance) throws IllegalContainerRequest, ClassNotFoundException {
+        if(!registeredObjects.containsKey(type)) {
+            registerType(type, true);
+        }
+        else {
+            registeredObjects.get(type).setLifeCycle(ObjectLifeCycle.SINGLETON);
+        }
+        registeredObjects.get(type).setInstance(instance);
+
+    }
+
+
 }
