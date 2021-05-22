@@ -3,6 +3,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class SimpleContainer {
 
@@ -55,14 +56,18 @@ public class SimpleContainer {
         }
 
     }
-    // C dziedziczy po A
-    // register(A, C)
 
-    // constructor(A a, B b)
-
-
-    public Object resolveInstance(Class<?> typeClass) throws Exception {
-        Constructor<?>[] constructors = typeClass.getConstructors();
+    public Object resolveInstance(Class<?> classType, HashMap<Class<?>, HashSet<Class<?>>> typesToResolve) throws Exception {
+        if(!typesToResolve.containsKey(classType)) {
+            typesToResolve.put(classType, new HashSet<>());
+        }
+//        if(typesToResolve.contains(classType)) {
+//            throw new IllegalContainerRequest("Wystąpił cykl - obiekt typu " + classType.getTypeName() +
+//                    " potrzebuje obiektu typu " + classType.getTypeName());
+//        }
+//
+//        typesToResolve.add(classType);
+        Constructor<?>[] constructors = classType.getConstructors();
         int constructorIndex = 0;
         int maxParametersNum = 0;
         int i = 0;
@@ -80,17 +85,32 @@ public class SimpleContainer {
         for(int j=0; j<maxParametersNum; j++) {
             Type param = paramsTypes[j].getClass();
             if (registeredObjects.containsKey(param)) {
-                paramsInstances[j] = resolveInstance(Class.forName(registeredObjects
+                Class<?> paramToResolve = Class.forName(registeredObjects
                         .get(param)
                         .getType()
-                        .getTypeName()));
+                        .getTypeName());
+                if(typesToResolve.containsKey(paramToResolve)) {
+                    if(typesToResolve.get(paramToResolve).contains(classType)) {
+                        throw new IllegalContainerRequest("Wystąpił cykl - obiekt typu " + paramToResolve.getTypeName()
+                                + " potrzebuje obiektu typu " + paramToResolve.getTypeName());
+                    }
+                }
+                typesToResolve.get(classType).add(paramToResolve);
+                paramsInstances[j] = resolveInstance(paramToResolve, typesToResolve);
             }
-            else if(Modifier.isAbstract(typeClass.getModifiers()) || Modifier.isInterface(typeClass.getModifiers()))
+            else if(Modifier.isAbstract(classType.getModifiers()) || Modifier.isInterface(classType.getModifiers()))
             {
                 throw new IllegalContainerRequest("Cannot inject non concrete type because it is not registered");
             }
             else {
-                paramsInstances[j] = resolveInstance(paramsTypes[j]);
+                if(typesToResolve.containsKey(paramsTypes[j])) {
+                    if(typesToResolve.get(paramsTypes[j]).contains(classType)) {
+                        throw new IllegalContainerRequest("Wystąpił cykl - obiekt typu " + paramsTypes[j].getTypeName()
+                                + " potrzebuje obiektu typu " + paramsTypes[j].getTypeName());
+                    }
+                }
+                typesToResolve.get(classType).add(paramsTypes[j]);
+                paramsInstances[j] = resolveInstance(paramsTypes[j], typesToResolve);
             }
 
         }
