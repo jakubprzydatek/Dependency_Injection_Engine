@@ -1,3 +1,4 @@
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -53,6 +54,47 @@ public class SimpleContainer {
             return regObj.getInstance();
         }
 
+    }
+    // C dziedziczy po A
+    // register(A, C)
+
+    // constructor(A a, B b)
+
+
+    public Object resolveInstance(Class<?> typeClass) throws Exception {
+        Constructor<?>[] constructors = typeClass.getConstructors();
+        int constructorIndex = 0;
+        int maxParametersNum = 0;
+        int i = 0;
+        for (Constructor<?> constructor: constructors) {
+            int paramsNumber = constructor.getParameterTypes().length;
+            if(paramsNumber > maxParametersNum) {
+                constructorIndex = i;
+                maxParametersNum = paramsNumber;
+            }
+            i++;
+        }
+        Constructor<?> chosenConstructor = constructors[constructorIndex];
+        Class<?>[] paramsTypes = chosenConstructor.getParameterTypes();
+        Object[] paramsInstances = new Object[maxParametersNum];
+        for(int j=0; j<maxParametersNum; j++) {
+            Type param = paramsTypes[j].getClass();
+            if (registeredObjects.containsKey(param)) {
+                paramsInstances[j] = resolveInstance(Class.forName(registeredObjects
+                        .get(param)
+                        .getType()
+                        .getTypeName()));
+            }
+            else if(Modifier.isAbstract(typeClass.getModifiers()) || Modifier.isInterface(typeClass.getModifiers()))
+            {
+                throw new IllegalContainerRequest("Cannot inject non concrete type because it is not registered");
+            }
+            else {
+                paramsInstances[j] = resolveInstance(paramsTypes[j]);
+            }
+
+        }
+        return chosenConstructor.newInstance(paramsInstances);
     }
 
     public void registerInstance(Type type, Object instance) throws IllegalContainerRequest, ClassNotFoundException {

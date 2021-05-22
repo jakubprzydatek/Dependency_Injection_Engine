@@ -140,7 +140,7 @@ class SimpleContainerTest {
     public void checkIfReturnsRegisteredInstance() throws Exception {
         //given
         SimpleContainer container = new SimpleContainer();
-        Foo fooInstance = new Foo();
+        Foo fooInstance = new Foo(5);//TODO usunuąć 5
         //when
         container.registerInstance(IFoo.class, fooInstance);
         IFoo fooContainerInstance = (IFoo) container.resolve(IFoo.class);
@@ -152,7 +152,7 @@ class SimpleContainerTest {
     public void checkIfReturnsRegisteredInstanceAfterTypeRegistration() throws Exception {
         //given
         SimpleContainer container = new SimpleContainer();
-        Foo fooInstance = new Foo();
+        Foo fooInstance = new Foo(5);//TODO usunuąć 5
         //when
         container.registerType(IFoo.class, Foo.class, true);
         container.registerInstance(IFoo.class, fooInstance);

@@ -1,2 +1,4 @@
-package resolveTestClasses;public class Bar2 {
+package resolveTestClasses;
+
+public class Bar2 {
 }
