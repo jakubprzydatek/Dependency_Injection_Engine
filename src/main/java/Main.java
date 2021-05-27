@@ -12,7 +12,7 @@ public class Main {
        SimpleContainer container = new SimpleContainer();
        container.registerType(Bar1.class, true);
        container.registerType(Bar2.class, true);
-       Bar1 result = (Bar1) container.resolveInstance(Bar1.class, new HashMap<Class<?>, HashSet<Class<?>>>());
+       Bar1 result = (Bar1) container.resolveInstance(Bar1.class, new HashSet<>());
         System.out.println(result);
     }
 

@@ -57,16 +57,15 @@ public class SimpleContainer {
 
     }
 
-    public Object resolveInstance(Class<?> classType, HashMap<Class<?>, HashSet<Class<?>>> typesToResolve) throws Exception {
-        if(!typesToResolve.containsKey(classType)) {
-            typesToResolve.put(classType, new HashSet<>());
+    public Object resolveInstance(Class<?> classType, HashSet<Class<?>> forbiddenTypes) throws Exception {
+        if(forbiddenTypes.contains(classType)) {
+            throw new IllegalContainerRequest("Wystąpił cykl - obiekt typu " + classType.getTypeName()
+                    + " potrzebuje obiektu typu " + classType.getTypeName());
         }
-//        if(typesToResolve.contains(classType)) {
-//            throw new IllegalContainerRequest("Wystąpił cykl - obiekt typu " + classType.getTypeName() +
-//                    " potrzebuje obiektu typu " + classType.getTypeName());
-//        }
-//
-//        typesToResolve.add(classType);
+        else {
+            forbiddenTypes.add(classType);
+        }
+
         Constructor<?>[] constructors = classType.getConstructors();
         int constructorIndex = 0;
         int maxParametersNum = 0;
@@ -89,28 +88,18 @@ public class SimpleContainer {
                         .get(param)
                         .getType()
                         .getTypeName());
-                if(typesToResolve.containsKey(paramToResolve)) {
-                    if(typesToResolve.get(paramToResolve).contains(classType)) {
-                        throw new IllegalContainerRequest("Wystąpił cykl - obiekt typu " + paramToResolve.getTypeName()
-                                + " potrzebuje obiektu typu " + paramToResolve.getTypeName());
-                    }
-                }
-                typesToResolve.get(classType).add(paramToResolve);
-                paramsInstances[j] = resolveInstance(paramToResolve, typesToResolve);
+                HashSet<Class<?>> forbiddenTypesCopy = new HashSet<>();
+                forbiddenTypesCopy.addAll(forbiddenTypes);
+                paramsInstances[j] = resolveInstance(paramToResolve, forbiddenTypesCopy);
             }
             else if(Modifier.isAbstract(classType.getModifiers()) || Modifier.isInterface(classType.getModifiers()))
             {
                 throw new IllegalContainerRequest("Cannot inject non concrete type because it is not registered");
             }
             else {
-                if(typesToResolve.containsKey(paramsTypes[j])) {
-                    if(typesToResolve.get(paramsTypes[j]).contains(classType)) {
-                        throw new IllegalContainerRequest("Wystąpił cykl - obiekt typu " + paramsTypes[j].getTypeName()
-                                + " potrzebuje obiektu typu " + paramsTypes[j].getTypeName());
-                    }
-                }
-                typesToResolve.get(classType).add(paramsTypes[j]);
-                paramsInstances[j] = resolveInstance(paramsTypes[j], typesToResolve);
+                HashSet<Class<?>> forbiddenTypesCopy = new HashSet<>();
+                forbiddenTypesCopy.addAll(forbiddenTypes);
+                paramsInstances[j] = resolveInstance(paramsTypes[j], forbiddenTypesCopy);
             }
 
         }
