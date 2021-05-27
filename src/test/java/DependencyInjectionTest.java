@@ -28,4 +28,15 @@ class DependencyInjectionTest {
         Assertions.assertEquals(bar1.getClass(), Bar1.class);
     }
 
+    @Test
+    public void checkIfCycleLength4Detected() throws Exception {
+        //given
+        SimpleContainer container = new SimpleContainer();
+        //when
+        Foo1 foo1 = (Foo1) container.resolveInstance(Foo1.class, new HashMap<>());
+        //then
+        Assertions.assertEquals(foo1.getClass(), Foo1.class);
+
+    }
+
 }
