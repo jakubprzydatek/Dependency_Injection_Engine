@@ -33,27 +33,9 @@ public class SimpleContainer {
                 singleton ? ObjectLifeCycle.SINGLETON : ObjectLifeCycle.TRANSIENT));
     }
 
-    public Object resolve(Type type)
-            throws ClassNotFoundException, IllegalContainerRequest, NoSuchMethodException,
+    public Object resolve(Type type) throws IllegalContainerRequest, ClassNotFoundException,
             InvocationTargetException, InstantiationException, IllegalAccessException {
-
-        if(!registeredObjects.containsKey(type)) {
-            Class<?> typeClass = Class.forName(type.getTypeName());
-
-            int modifier = typeClass.getModifiers();
-            if(Modifier.isAbstract(modifier) || Modifier.isInterface(modifier)) {
-                throw new IllegalContainerRequest("Not concrete type is not resolvable!");
-            }
-
-            return typeClass.getConstructor().newInstance();
-        }
-        else {
-            RegisteredObject regObj = registeredObjects.get(type);
-            if(regObj.getInstance() == null || regObj.getLifeCycle() == ObjectLifeCycle.TRANSIENT) {
-                regObj.createInstance();
-            }
-            return regObj.getInstance();
-        }
+        return resolveInstance(Class.forName(type.getTypeName()), new HashSet<>());
 
     }
 
@@ -103,6 +85,12 @@ public class SimpleContainer {
             }
 
         }
+
+        if(objectRegistered) {
+            registeredObjects.get(rootClassType).setInstance(chosenConstructor.newInstance(paramsInstances));
+            return registeredObjects.get(rootClassType).getInstance();
+        }
+
         return chosenConstructor.newInstance(paramsInstances);
     }
 

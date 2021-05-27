@@ -1,5 +1,6 @@
 import resolveTestClasses.Bar1;
 import resolveTestClasses.Bar2;
+import resolveTestClasses.DependecyConstructor;
 import testClasses.Foo;
 
 import java.lang.reflect.Constructor;
@@ -9,11 +10,11 @@ import java.util.HashSet;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-       SimpleContainer container = new SimpleContainer();
-       container.registerType(Bar1.class, true);
-       container.registerType(Bar2.class, true);
-       Bar1 result = (Bar1) container.resolveInstance(Bar1.class, new HashSet<>());
-        System.out.println(result);
+       Constructor<?>[] barConstructors = Bar1.class.getConstructors();
+        /*for (Constructor<?> constructor:
+             barConstructors) {
+            System.out.println(constructor.getAnnotationsByType(DependecyConstructor.class));
+        }*/
     }
 
 

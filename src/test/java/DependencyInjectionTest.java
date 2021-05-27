@@ -14,13 +14,13 @@ class DependencyInjectionTest {
         //given
         SimpleContainer container = new SimpleContainer();
         //when
-        Bar3 bar3 = (Bar3) container.resolveInstance(Bar3.class, new HashSet<>());
+        Bar3 bar3 = (Bar3) container.resolve(Bar3.class);
         //then
         Assertions.assertEquals(bar3.getClass(), Bar3.class);
     }
 
     @Test
-    public void checkIfCycleDetected() throws Exception {
+    public void checkIfCycleDetected() {
         //given
         SimpleContainer container = new SimpleContainer();
         //when
@@ -33,19 +33,22 @@ class DependencyInjectionTest {
         //given
         SimpleContainer container = new SimpleContainer();
         //when
-        Bar1 bar1 = (Bar1) container.resolveInstance(Bar1.class, new HashSet<>());
+        Bar1 bar1 = (Bar1) container.resolve(Bar1.class);
         //then
         Assertions.assertEquals(bar1.getClass(), Bar1.class);
     }
 
     @Test
-    public void checkIfCycleLength4Detected() throws Exception {
+    public void checkIfCycleLength4Detected() {
         //given
         SimpleContainer container = new SimpleContainer();
+        String expectedMessage = "Cycle occured - object of type "+ Foo1.class.getTypeName() +
+                " needs object of type " + Foo1.class.getTypeName() + "!";
         //when
-        Foo1 foo1 = (Foo1) container.resolveInstance(Foo1.class, new HashSet<>());
+        IllegalContainerRequest thrown = Assertions.
+                assertThrows(IllegalContainerRequest.class, () -> container.resolve(Foo1.class));
         //then
-        Assertions.assertEquals(foo1.getClass(), Foo1.class);
+        Assertions.assertEquals(thrown.getMessage(), expectedMessage);
 
     }
 
