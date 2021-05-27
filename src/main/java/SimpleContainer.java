@@ -1,3 +1,5 @@
+import resolveTestClasses.DependecyConstructor;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -39,22 +41,56 @@ public class SimpleContainer {
 
     }
 
-    public Object resolveInstance(Class<?> classType, HashSet<Class<?>> forbiddenTypes) throws Exception {
+    public Object resolveInstance(Class<?> classType, HashSet<Class<?>> forbiddenTypes)
+            throws IllegalContainerRequest, ClassNotFoundException, InvocationTargetException,
+            InstantiationException, IllegalAccessException {
+        Class<?> rootClassType = classType;
+        boolean objectRegistered = registeredObjects.containsKey(classType);
+        boolean singleton = false;
+        if(objectRegistered) {
+            singleton = registeredObjects.get(classType).getLifeCycle() == ObjectLifeCycle.SINGLETON;
+        }
+
         if(forbiddenTypes.contains(classType)) {
-            throw new IllegalContainerRequest("Wystąpił cykl - obiekt typu " + classType.getTypeName()
-                    + " potrzebuje obiektu typu " + classType.getTypeName());
+            throw new IllegalContainerRequest("Cycle occured - object of type " + classType.getTypeName()
+                    + " needs object of type " + classType.getTypeName() + "!");
         }
         else {
             forbiddenTypes.add(classType);
+        }
+
+        if(objectRegistered && singleton) {
+            if(registeredObjects.get(classType).getInstance() != null) {
+                return registeredObjects.get(classType).getInstance();
+            }
+        }
+
+        if(Modifier.isAbstract(classType.getModifiers()) || Modifier.isInterface(classType.getModifiers())) {
+            if(objectRegistered) {
+                classType = Class.forName(registeredObjects.get(classType).getType().getTypeName());
+
+            }
+            else {
+                throw new IllegalContainerRequest("Not concrete type is not resolvable!");
+            }
         }
 
         Constructor<?>[] constructors = classType.getConstructors();
         int constructorIndex = 0;
         int maxParametersNum = 0;
         int i = 0;
+        boolean foundAnnotation = false;
         for (Constructor<?> constructor: constructors) {
             int paramsNumber = constructor.getParameterTypes().length;
-            if(paramsNumber > maxParametersNum) {
+            if(constructor.getAnnotation(DependecyConstructor.class) != null) {
+                if(foundAnnotation) {
+                    throw new IllegalContainerRequest("Found more than one DependencyConstructor annotations!");
+                }
+                constructorIndex = i;
+                maxParametersNum = paramsNumber;
+                foundAnnotation = true;
+            }
+            if(paramsNumber > maxParametersNum && !foundAnnotation) {
                 constructorIndex = i;
                 maxParametersNum = paramsNumber;
             }
@@ -64,26 +100,8 @@ public class SimpleContainer {
         Class<?>[] paramsTypes = chosenConstructor.getParameterTypes();
         Object[] paramsInstances = new Object[maxParametersNum];
         for(int j=0; j<maxParametersNum; j++) {
-            Type param = paramsTypes[j].getClass();
-            if (registeredObjects.containsKey(param)) {
-                Class<?> paramToResolve = Class.forName(registeredObjects
-                        .get(param)
-                        .getType()
-                        .getTypeName());
-                HashSet<Class<?>> forbiddenTypesCopy = new HashSet<>();
-                forbiddenTypesCopy.addAll(forbiddenTypes);
-                paramsInstances[j] = resolveInstance(paramToResolve, forbiddenTypesCopy);
-            }
-            else if(Modifier.isAbstract(classType.getModifiers()) || Modifier.isInterface(classType.getModifiers()))
-            {
-                throw new IllegalContainerRequest("Cannot inject non concrete type because it is not registered");
-            }
-            else {
-                HashSet<Class<?>> forbiddenTypesCopy = new HashSet<>();
-                forbiddenTypesCopy.addAll(forbiddenTypes);
-                paramsInstances[j] = resolveInstance(paramsTypes[j], forbiddenTypesCopy);
-            }
-
+            HashSet<Class<?>> forbiddenTypesCopy = new HashSet<>(forbiddenTypes);
+            paramsInstances[j] = resolveInstance(paramsTypes[j], forbiddenTypesCopy);
         }
 
         if(objectRegistered) {
