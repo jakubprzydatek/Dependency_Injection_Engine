@@ -41,7 +41,7 @@ public class SimpleContainer {
 
     }
 
-    public Object resolveInstance(Class<?> classType, HashSet<Class<?>> forbiddenTypes)
+    private Object resolveInstance(Class<?> classType, HashSet<Class<?>> forbiddenTypes)
             throws IllegalContainerRequest, ClassNotFoundException, InvocationTargetException,
             InstantiationException, IllegalAccessException {
         Class<?> rootClassType = classType;
