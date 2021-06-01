@@ -127,26 +127,6 @@ class DependencyInjectionTest {
         //then
         Assertions.assertEquals(thrown.getMessage(), "Found more than one DependencyConstructor annotations!");
     }
-
-    @Test
-    public void noConstructorsTest() throws Exception {
-        //given
-        SimpleContainer container = new SimpleContainer();
-        //when
-        String result = (String) container.resolve(String.class);
-        //then
-        Assertions.assertEquals(result.getClass(), String.class);
-    }
-
-    @Test
-    public void noConstructorsButRegisteredInstanceTest() throws Exception {
-        //given
-        SimpleContainer container = new SimpleContainer();
-        //when
-        container.registerInstance(String.class, new String("A"));
-        String result = (String) container.resolve(String.class);
-        //then
-        Assertions.assertEquals(result.getClass(), String.class);
-    }
+    
 
 }
